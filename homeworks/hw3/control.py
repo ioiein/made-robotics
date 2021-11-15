@@ -8,7 +8,7 @@ from pid import PID
 
 
 # TODO: Initialize the pid variable.
-steering_pid = PID(0.053, 0.0, 0.0)
+steering_pid = PID(0.08575, 0.0, 2.0)
 
 # Checks if the SocketIO event has JSON data.
 # If there is data the JSON object in string format will be returned,
@@ -33,13 +33,21 @@ async def handleTelemetry(websocket, msgJson):
     # [-1, 1].
     # NOTE: Feel free to play around with the throttle and speed.
     # Maybe use another PID controller to control the speed!
+    steering_pid.UpdateError(cte)
+
+    steer_value = -steering_pid.TotalError()
+
+    if steer_value > 1:
+        steer_value = 1
+    if steer_value < -1:
+        steer_value = -1
 
     response = {}
 
     response["steering_angle"] = steer_value
 
     # TODO: Play around with throttle value
-    response["throttle"] = 0.3
+    response["throttle"] = 0.15
 
     msg = '42["steer",' + json.dumps(response) + "]"
 
