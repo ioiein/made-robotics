@@ -82,7 +82,7 @@ class Window:
         explored = set()
         frontier = []
         cost = self.cost_func(path[-1])
-        passed = (len(path) - 1) * step_size
+        passed = 0
         state = (cost, passed, path)
         heapq.heappush(frontier, state)
 
