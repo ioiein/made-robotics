@@ -1,7 +1,6 @@
 from tkinter import *
 import math
-import heapq, random
-import time
+import heapq
 import numpy as np
 from sympy import Point, Polygon
 
@@ -48,19 +47,16 @@ def collides(position, obstacle):
 class Window:
     """================= Your Main Function ================="""
 
-    def cost_func(self, position, weights):
+    def cost_func(self, position):
         x_target, y_target, yaw_target = self.get_target_position()
         x, y, yaw = position
         distance = math.sqrt(math.pow(x_target - x, 2) + math.pow(y_target - y, 2))
-        rotation = abs(y_target - yaw)
-        if rotation > math.pi:
-            rotation = abs(rotation - 2 * math.pi)
-        return distance + rotation * weights[0]
+        return distance
 
     def next_positions(self, position, step_size):
         x, y, yaw = position
         next_poses = []
-        for angle in np.arange(-0.5, 0.5, 0.1):
+        for angle in np.arange(-0.5, 0.51, 0.25):
             yaw_new = yaw + angle
             x_new = x + step_size * math.sin(yaw_new)
             y_new = y - step_size * math.cos(yaw_new)
@@ -75,11 +71,12 @@ class Window:
                 break
         return collision
 
-    def a_star(self, path, step_size, acc, weights, eps):
-        path = path
+    def a_star(self, step_size, acc, eps):
+        start_position = self.get_start_position()
+        path = [start_position]
         explored = set()
         frontier = []
-        cost = self.cost_func(path[-1], weights)
+        cost = self.cost_func(path[-1])
         passed = (len(path) - 1) * step_size
         state = (cost, passed, path)
         heapq.heappush(frontier, state)
@@ -87,7 +84,7 @@ class Window:
         while len(frontier) > 0:
             _, passed, path = heapq.heappop(frontier)
 
-            if self.cost_func(path[-1], weights) < eps:
+            if self.cost_func(path[-1]) < eps:
                 break
 
             for next_position in self.next_positions(path[-1], step_size):
@@ -104,7 +101,7 @@ class Window:
                 explored.add((round(next_position[0], acc),
                               round(next_position[1], acc), round(next_position[2], acc)))
                 passed += step_size
-                cost = self.cost_func(next_position, weights)
+                cost = self.cost_func(next_position)
                 state = (passed + cost, passed, path_next)
                 heapq.heappush(frontier, state)
 
@@ -121,9 +118,8 @@ class Window:
     def go(self, event):
 
         # Write your code here
-        start_position = self.get_start_position()
-        path = self.a_star([start_position], 20, 1, [0], 20)
-        self.path_object_ids = self.draw_path(path)
+        path = self.a_star(100, 1, 50)
+        path_ids = self.draw_path(path)
 
         #print("Start position:", self.get_start_position())
         #print("Target position:", self.get_target_position())
