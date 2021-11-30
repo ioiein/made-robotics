@@ -51,7 +51,12 @@ class Window:
         x_target, y_target, yaw_target = self.get_target_position()
         x, y, yaw = position
         distance = math.sqrt(math.pow(x_target - x, 2) + math.pow(y_target - y, 2))
-        return distance
+
+        rotation = abs(yaw_target - yaw)
+        if rotation > math.pi:
+            rotation = abs(rotation - 2 * math.pi)
+
+        return distance + rotation * 200
 
     def next_positions(self, position, step_size):
         x, y, yaw = position
