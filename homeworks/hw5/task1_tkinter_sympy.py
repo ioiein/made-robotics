@@ -49,13 +49,31 @@ class Window:
     """================= Your Main Function ================="""
 
     def cost_func(self, position, weights):
-        return 0
+        x_target, y_target, yaw_target = self.get_target_position()
+        x, y, yaw = position
+        distance = math.sqrt(math.pow(x_target - x, 2) + math.pow(y_target - y, 2))
+        rotation = abs(y_target - yaw)
+        if rotation > math.pi:
+            rotation = abs(rotation - 2 * math.pi)
+        return distance + rotation * weights[0]
 
     def next_positions(self, position, step_size):
-        return []
+        x, y, yaw = position
+        next_poses = []
+        for angle in np.arange(-0.5, 0.5, 0.1):
+            yaw_new = yaw + angle
+            x_new = x + step_size * math.sin(yaw_new)
+            y_new = y - step_size * math.cos(yaw_new)
+            next_poses.append([x_new, y_new, yaw_new])
+        return next_poses
 
     def check_collision(self, position):
-        return True
+        collision = False
+        for obstacle in self.get_obstacles():
+            if collides(position, obstacle):
+                collision = True
+                break
+        return collision
 
     def a_star(self, path, step_size, acc, weights, eps):
         path = path
@@ -92,21 +110,32 @@ class Window:
 
         return path
 
+    def draw_path(self, path):
+        ids = []
+        for point in path:
+            id = self.canvas.create_oval(point[0] - 5, point[1] - 5, point[0] + 5, point[1] + 5, fill='green')
+            ids.append(id)
+        self.root.update()
+        return ids
+
     def go(self, event):
 
         # Write your code here
+        start_position = self.get_start_position()
+        path = self.a_star([start_position], 20, 1, [0], 20)
+        self.path_object_ids = self.draw_path(path)
 
-        print("Start position:", self.get_start_position())
-        print("Target position:", self.get_target_position())
-        print("Obstacles:", self.get_obstacles())
+        #print("Start position:", self.get_start_position())
+        #print("Target position:", self.get_target_position())
+        #print("Obstacles:", self.get_obstacles())
 
         # Example of collision calculation
 
-        number_of_collisions = 0
-        for obstacle in self.get_obstacles():
-            if collides(self.get_start_position(), obstacle):
-                number_of_collisions += 1
-        print("Start position collides with", number_of_collisions, "obstacles")
+        #number_of_collisions = 0
+        #for obstacle in self.get_obstacles():
+        #    if collides(self.get_start_position(), obstacle):
+        #        number_of_collisions += 1
+        #print("Start position collides with", number_of_collisions, "obstacles")
 
     '''================= Interface Methods ================='''
 
